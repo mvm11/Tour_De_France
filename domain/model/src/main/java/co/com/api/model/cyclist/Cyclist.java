@@ -13,6 +13,6 @@ public class Cyclist {
     private String cyclistId;
     private String cyclistName;
     private String cyclistNumber;
-    private String teamId;
+    private String teamCode;
     private String nationality;
 }

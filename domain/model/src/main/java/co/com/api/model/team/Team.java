@@ -15,6 +15,7 @@ public class Team {
 
     private String teamId;
     private String teamName;
+    private String teamCode;
     private String country;
     private List<Cyclist> cyclists;
 }
