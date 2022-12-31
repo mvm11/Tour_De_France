@@ -54,11 +54,11 @@ public abstract class AdapterOperations<E, D, I, R extends ReactiveCrudRepositor
         return doQueryMany(repository.findAll());
     }
 
-    public Mono<E> doQuery(Mono<D> query) {
+    protected Mono<E> doQuery(Mono<D> query) {
         return query.map(this::toEntity);
     }
 
-    public Flux<E> doQueryMany(Flux<D> query) {
+    protected Flux<E> doQueryMany(Flux<D> query) {
         return query.map(this::toEntity);
     }
 

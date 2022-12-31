@@ -14,7 +14,7 @@ public class RouterRest {
 @Bean
 public RouterFunction<ServerResponse> routerFunctionCyclist(HandlerCyclist handlerCyclist) {
     return route(GET("/api/cyclist"), handlerCyclist::listenFindAllCyclistUseCase)
-    .andRoute(POST("/api/usecase/otherpath"), handlerCyclist::listenPOSTUseCase).and(route(GET("/api/otherusercase/path"), handlerCyclist::listenGETOtherUseCase));
+    .andRoute(POST("/api/cyclist/save"), handlerCyclist::listenPOSTUseCase).and(route(GET("/api/otherusercase/path"), handlerCyclist::listenGETOtherUseCase));
 
     }
 }

@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "cyclist")
 @Data
 @Builder(toBuilder = true)
+@Document(collection = "cyclist")
 @NoArgsConstructor
 @AllArgsConstructor
 public class CyclistDocument {
@@ -20,4 +20,6 @@ public class CyclistDocument {
     private String cyclistNumber;
     private String teamCode;
     private String nationality;
+
+
 }
