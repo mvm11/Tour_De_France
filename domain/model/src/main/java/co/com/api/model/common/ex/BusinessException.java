@@ -7,14 +7,11 @@ public class BusinessException extends ApplicationException {
     public enum Type {
 
         ERROR_GETTING_All_cyclist("Error getting cyclist in MongoDB."),
-        ERROR_GETTING_All_TEAMS("Error getting teams in MongoDB."),
-
+        TEAMS_NOT_FOUND("Teams not found"),
         ERROR_TEAM("An error occurred while creating the record due to ID duplicates."),
         DUPLICATE_CYCLIST_NUMBER("there cannot exist cyclists with the same number"),
         INCOMPLETE_CYCLIST_INFORMATION("Incomplete cyclist information"),
-
         INCOMPLETE_TEAM_INFORMATION("Incomplete team information"),
-
         NO_CYCLISTS_TEAM_NUMBER("There are no cyclists with that team number"),
         ERROR_CYCLIST("An error occurred while creating the record due to ID duplicates."),
         TEAM_CODE_EXCEPTION("A team only can have a team number with 3 characters"),
@@ -23,7 +20,8 @@ public class BusinessException extends ApplicationException {
         CYCLIST_LIST("A team only can have 8 cyclist"),
         CYCLIST_LIST_CYCLIST_NUMBER_DUPLICATE("A team can only 8 cyclist with different number"),
         CYCLIST_LIST_CYCLIST_DISTINCT_TEAM_NUMBER("There are cyclist with a different team number"),
-        CYCLIST_LIST_WITH_EMPTY_FIELDS("There are cyclist with empty fields");
+        CYCLIST_LIST_WITH_EMPTY_FIELDS("There are cyclist with empty fields"),
+        TEAM_NOT_FOUND("Team not found");
 
 
         private final String message;

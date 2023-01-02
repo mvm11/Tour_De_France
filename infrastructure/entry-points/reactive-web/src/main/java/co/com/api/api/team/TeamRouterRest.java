@@ -15,6 +15,7 @@ public class TeamRouterRest {
     @Bean
     public RouterFunction<ServerResponse> routerFunctionTeam(TeamHandler teamHandler) {
         return route(GET("/api/team"), teamHandler::listenFindAllTeamsUseCase)
+                .andRoute(GET("/api/team/{id}"), teamHandler::listenFindTeamByIdUseCase)
                 .andRoute(POST("/api/team/save"), teamHandler::listenSaveUseCase);
 
     }

@@ -7,6 +7,7 @@ import reactor.core.publisher.Mono;
 public interface TeamRepository {
 
     Flux<Team> findAllTeams();
+    Mono<Team> findTeamById(String teamId);
     Mono<Team> saveTeam(Team team);
     Mono<Team> updateTeamById(String teamId, Team team);
     Mono<Void> deleteTeamById(String teamId);

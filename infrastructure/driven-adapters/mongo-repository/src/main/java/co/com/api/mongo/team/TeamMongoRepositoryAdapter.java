@@ -2,10 +2,8 @@ package co.com.api.mongo.team;
 
 
 import co.com.api.model.common.ex.BusinessException;
-import co.com.api.model.cyclist.Cyclist;
 import co.com.api.model.team.Team;
 import co.com.api.model.team.gateways.TeamRepository;
-import co.com.api.mongo.cyclist.CyclistDocument;
 import co.com.api.mongo.helper.AdapterOperations;
 import com.mongodb.DuplicateKeyException;
 import org.reactivecommons.utils.ObjectMapper;
@@ -13,8 +11,6 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.function.Function;
 
 @Repository
 public class TeamMongoRepositoryAdapter extends AdapterOperations<Team, TeamDocument, String, TeamMongoDBRepository>
@@ -32,7 +28,15 @@ public class TeamMongoRepositoryAdapter extends AdapterOperations<Team, TeamDocu
     public Flux<Team> findAllTeams() {
         return repository.findAll()
                 .onErrorResume(error -> Mono.error(new RuntimeException("Error getting all teams from MongoDB" + error.getMessage())))
-                .switchIfEmpty(Mono.error(BusinessException.Type.ERROR_GETTING_All_TEAMS.build("")))
+                .switchIfEmpty(Mono.error(BusinessException.Type.TEAMS_NOT_FOUND.build("")))
+                .map(this::convertToTeam);
+    }
+
+    @Override
+    public Mono<Team> findTeamById(String teamId) {
+        return repository.findById(teamId)
+                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting team from MongoDB" + error.getMessage())))
+                .switchIfEmpty(Mono.error(BusinessException.Type.TEAM_NOT_FOUND.build("")))
                 .map(this::convertToTeam);
     }
 
