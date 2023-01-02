@@ -1,7 +1,8 @@
-package co.com.api.api;
+package co.com.api.api.cyclist;
 
 import co.com.api.model.common.ex.BusinessException;
 import co.com.api.model.cyclist.Cyclist;
+import co.com.api.usecase.findallcyclist.cyclist.FindAllCyclistByTeamCodeUseCase;
 import co.com.api.usecase.findallcyclist.cyclist.FindAllCyclistUseCase;
 import co.com.api.usecase.findallcyclist.cyclist.SaveCyclistUseCase;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +15,11 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class HandlerCyclist {
+public class CyclistHandler {
 
     private final FindAllCyclistUseCase findAllCyclistUseCase;
+
+    private final FindAllCyclistByTeamCodeUseCase findAllCyclistByTeamCodeUseCase;
     private final SaveCyclistUseCase saveCyclistUseCase;
     public Mono<ServerResponse> listenFindAllCyclistUseCase(ServerRequest serverRequest) {
         return ServerResponse.ok()
@@ -24,8 +27,11 @@ public class HandlerCyclist {
                 .body(findAllCyclistUseCase.findAllCyclist(), Cyclist.class);
     }
 
-    public Mono<ServerResponse> listenGETOtherUseCase(ServerRequest serverRequest) {
-        return ServerResponse.ok().bodyValue("");
+    public Mono<ServerResponse> listenFindAllCyclistByTeamCodeUseCase(ServerRequest serverRequest) {
+        String teamCode = serverRequest.pathVariable("teamCode");
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(findAllCyclistByTeamCodeUseCase.findAllCyclistByTeamCode(teamCode), Cyclist.class);
     }
 
     public Mono<ServerResponse> listenPOSTUseCase(ServerRequest serverRequest) {

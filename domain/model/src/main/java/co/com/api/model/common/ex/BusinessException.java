@@ -7,9 +7,19 @@ public class BusinessException extends ApplicationException {
     public enum Type {
 
         ERROR_GETTING_All_cyclist("Error getting cyclist in MongoDB."),
+        ERROR_GETTING_All_TEAMS("Error getting teams in MongoDB."),
+
+        ERROR_TEAM("An error occurred while creating the record due to ID duplicates."),
         DUPLICATE_CYCLIST_NUMBER("there cannot exist cyclists with the same number"),
-        INCOMPLETE_INFORMATION("Incomplete cyclist information\""),
-        ERROR_CYCLIST("An error occurred while creating the record due to ID duplicates.");
+        INCOMPLETE_CYCLIST_INFORMATION("Incomplete cyclist information"),
+
+        INCOMPLETE_TEAM_INFORMATION("Incomplete team information"),
+
+        NO_CYCLISTS_TEAM_NUMBER("There are no cyclists with that team number"),
+        ERROR_CYCLIST("An error occurred while creating the record due to ID duplicates."),
+        TEAM_CODE_EXCEPTION("A team only can have a team number with 3 characters"),
+        DUPLICATE_TEAM_NUMBER("there cannot exist teams with the same number");
+
 
         private final String message;
 

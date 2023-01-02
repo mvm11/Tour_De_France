@@ -44,10 +44,10 @@ public class SaveCyclistUseCase {
     private boolean getFieldsPredicate(String field) {
         return !isNull(field) && !field.equalsIgnoreCase("");
     }
-    private Function<List<String>, Mono<? extends Cyclist>> validateCyclistFieldsSize(Cyclist cyclist1) {
+    private Function<List<String>, Mono<Cyclist>> validateCyclistFieldsSize(Cyclist cyclist1) {
         return list -> (list.size() == cyclist1.cyclistFields().length)
                 ? cyclistRepository.saveCyclist(cyclist1)
-                : Mono.error(BusinessException.Type.INCOMPLETE_INFORMATION.build(""));
+                : Mono.error(BusinessException.Type.INCOMPLETE_CYCLIST_INFORMATION.build(""));
     }
 
 }

@@ -1,26 +1,27 @@
-package co.com.api.model.team;
+package co.com.api.mongo.team;
+
 import co.com.api.model.cyclist.Cyclist;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.List;
-import java.util.stream.Stream;
 
 @Data
 @Builder(toBuilder = true)
+@Document(collection = "team")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Team {
+public class TeamDocument {
 
+    @Id
     private String id;
     private String teamName;
     private String teamCode;
     private String country;
     private List<Cyclist> cyclists;
-
-    public String[] teamFields(){
-        return Stream.of(teamName, teamCode, country).toArray(String[]::new);
-    }
 }
