@@ -8,10 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -73,9 +70,8 @@ public class SaveTeamUseCase {
                         .filter(cyclist -> cyclist.getTeamCode().equalsIgnoreCase(team.getTeamCode()))
                         .count() != team.getCyclists().size()
                         ? Mono.error(BusinessException.Type.CYCLIST_LIST_CYCLIST_DISTINCT_TEAM_NUMBER.build(""))
-                        : validateTeamCode(team1));
+                        : validateTeamCyclistFields(team1));
     }
-
     private boolean compareTeamCyclistListSize(Team team, Team team1) {
         return getLongStream(team1)
                 .sum() != team.getCyclists().size();
@@ -102,6 +98,29 @@ public class SaveTeamUseCase {
     private Predicate<List<Cyclist>> getCyclistWithSameNumberPredicate() {
         return cyclistWithSameNumber -> cyclistWithSameNumber.size() == 1;
     }
+
+    private Mono<Team> validateTeamCyclistFields(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> filterCyclistListFields(team1)
+                        .findAny()
+                        .isEmpty()
+                        ? validateTeamCode(team1)
+                        : Mono.error(BusinessException.Type.CYCLIST_LIST_WITH_EMPTY_FIELDS.build("")));
+    }
+
+    private Stream<Cyclist> filterCyclistListFields(Team team1) {
+        return team1.getCyclists()
+                .stream()
+                .filter(this::getCyclistListFieldsPredicate);
+    }
+
+    private boolean getCyclistListFieldsPredicate(Cyclist cyclist) {
+        return Arrays.stream(cyclist.cyclistFields())
+                .anyMatch(Objects::isNull)
+                || Arrays.stream(cyclist.cyclistFields())
+                .anyMatch(field -> field.equalsIgnoreCase(""));
+    }
+
     private Mono<Team> validateTeamCode(Team team) {
         return Mono.just(team)
                 .flatMap(team1 -> team1.getTeamCode().length() > 3
