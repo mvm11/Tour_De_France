@@ -75,6 +75,7 @@ public class TeamMongoRepositoryAdapter extends AdapterOperations<Team, TeamDocu
 
     @Override
     public Mono<Void> deleteTeamById(String teamId) {
-        return null;
+        return repository.deleteById(teamId)
+                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting team from MongoDB" + error.getMessage())));
     }
 }

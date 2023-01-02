@@ -4,10 +4,7 @@ import co.com.api.model.common.ex.BusinessException;
 import co.com.api.model.common.ex.NotFoundException;
 import co.com.api.model.cyclist.Cyclist;
 import co.com.api.model.team.Team;
-import co.com.api.usecase.findallcyclist.team.FindAllTeamUseCase;
-import co.com.api.usecase.findallcyclist.team.FindTeamByCountryUseCase;
-import co.com.api.usecase.findallcyclist.team.FindTeamByIdUseCase;
-import co.com.api.usecase.findallcyclist.team.SaveTeamUseCase;
+import co.com.api.usecase.findallcyclist.team.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,9 +19,10 @@ public class TeamHandler {
 
     private final FindAllTeamUseCase findAllTeamUseCase;
     private final FindTeamByIdUseCase findTeamByIdUseCase;
-
     private final FindTeamByCountryUseCase findTeamByCountryUseCase;
     private final SaveTeamUseCase saveTeamUseCase;
+
+    private final DeleteTeamUseCase deleteTeamUseCase;
 
     public Mono<ServerResponse> listenFindAllTeamsUseCase(ServerRequest serverRequest) {
         return ServerResponse.ok()
@@ -72,5 +70,10 @@ public class TeamHandler {
         }
         return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Mono.just(error.getMessage()), String.class);
+    }
+    public Mono<ServerResponse> listenDeleteTeamUseCase(ServerRequest serverRequest) {
+        String id = serverRequest.pathVariable("id");
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(deleteTeamUseCase.deleteTeam(id), Team.class);
     }
 }
