@@ -9,9 +9,14 @@ import lombok.extern.java.Log;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import static java.util.Objects.isNull;
 
@@ -24,19 +29,79 @@ public class SaveTeamUseCase {
     private final FindAllTeamUseCase findAllTeamUseCase;
 
     public Mono<Team> saveTeam(Team team){
-        return Mono.just(team).flatMap(this::validateDuplicateTeam);
+        return Mono.just(team).flatMap(this::validateDuplicateTeamCode);
     }
 
-    private Mono<Team> validateDuplicateTeam(Team team) {
+    private Mono<Team> validateDuplicateTeamCode(Team team) {
         return findAllTeamUseCase
                 .findAllTeams()
                 .filter(team1 -> team1.getTeamCode().equalsIgnoreCase(team.getTeamCode()))
                 .collectList()
                 .flatMap(list -> (list.isEmpty())
-                        ? validateTeamCode(team)
+                        ? validateDuplicateTeamName(team)
                         : Mono.error(BusinessException.Type.DUPLICATE_TEAM_NUMBER.build("")));
     }
 
+    private Mono<Team> validateDuplicateTeamName(Team team) {
+        return findAllTeamUseCase
+                .findAllTeams()
+                .filter(team1 -> team1.getTeamName().equalsIgnoreCase(team.getTeamName()))
+                .collectList()
+                .flatMap(list -> (list.isEmpty())
+                        ? validateTeamCyclistList(team)
+                        : Mono.error(BusinessException.Type.DUPLICATE_TEAM_NAME.build("")));
+    }
+
+    private Mono<Team> validateTeamCyclistList(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> team1.getCyclists().size() > 8
+                        ? Mono.error(BusinessException.Type.CYCLIST_LIST.build(""))
+                        : validateTeamCyclistCode(team1));
+    }
+
+    private Mono<Team> validateTeamCyclistCode(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> compareTeamCyclistListSize(team, team1)
+                        ? Mono.error(BusinessException.Type.CYCLIST_LIST_CYCLIST_NUMBER_DUPLICATE.build(""))
+                        : validateTeamCyclist(team1));
+    }
+
+    private Mono<Team> validateTeamCyclist(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> team1.getCyclists()
+                        .stream()
+                        .filter(cyclist -> cyclist.getTeamCode().equalsIgnoreCase(team.getTeamCode()))
+                        .count() != team.getCyclists().size()
+                        ? Mono.error(BusinessException.Type.CYCLIST_LIST_CYCLIST_DISTINCT_TEAM_NUMBER.build(""))
+                        : validateTeamCode(team1));
+    }
+
+    private boolean compareTeamCyclistListSize(Team team, Team team1) {
+        return getLongStream(team1)
+                .sum() != team.getCyclists().size();
+    }
+
+    private LongStream getLongStream(Team team1) {
+        return getStringListMap(team1)
+                .values()
+                .stream()
+                .filter(getCyclistWithSameNumberPredicate())
+                .mapToLong(Collection::size);
+    }
+
+    private Map<String, List<Cyclist>> getStringListMap(Team team1) {
+        return getCyclistStream(team1)
+                .collect(Collectors.groupingBy(Cyclist::getCyclistNumber));
+    }
+
+    private Stream<Cyclist> getCyclistStream(Team team1) {
+        return team1.getCyclists()
+                .stream();
+    }
+
+    private Predicate<List<Cyclist>> getCyclistWithSameNumberPredicate() {
+        return cyclistWithSameNumber -> cyclistWithSameNumber.size() == 1;
+    }
     private Mono<Team> validateTeamCode(Team team) {
         return Mono.just(team)
                 .flatMap(team1 -> team1.getTeamCode().length() > 3

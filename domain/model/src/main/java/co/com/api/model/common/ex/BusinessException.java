@@ -18,7 +18,11 @@ public class BusinessException extends ApplicationException {
         NO_CYCLISTS_TEAM_NUMBER("There are no cyclists with that team number"),
         ERROR_CYCLIST("An error occurred while creating the record due to ID duplicates."),
         TEAM_CODE_EXCEPTION("A team only can have a team number with 3 characters"),
-        DUPLICATE_TEAM_NUMBER("there cannot exist teams with the same number");
+        DUPLICATE_TEAM_NUMBER("there cannot exist teams with the same number"),
+        DUPLICATE_TEAM_NAME("there cannot exist teams with the same name"),
+        CYCLIST_LIST("A team only can have 8 cyclist"),
+        CYCLIST_LIST_CYCLIST_NUMBER_DUPLICATE("A team can only 8 cyclist with different number"),
+        CYCLIST_LIST_CYCLIST_DISTINCT_TEAM_NUMBER("There are cyclist with a different team number");
 
 
         private final String message;
