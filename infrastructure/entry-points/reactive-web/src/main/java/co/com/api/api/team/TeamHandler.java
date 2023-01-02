@@ -1,9 +1,11 @@
 package co.com.api.api.team;
 
 import co.com.api.model.common.ex.BusinessException;
+import co.com.api.model.common.ex.NotFoundException;
 import co.com.api.model.cyclist.Cyclist;
 import co.com.api.model.team.Team;
 import co.com.api.usecase.findallcyclist.team.FindAllTeamUseCase;
+import co.com.api.usecase.findallcyclist.team.FindTeamByCountryUseCase;
 import co.com.api.usecase.findallcyclist.team.FindTeamByIdUseCase;
 import co.com.api.usecase.findallcyclist.team.SaveTeamUseCase;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +21,9 @@ import reactor.core.publisher.Mono;
 public class TeamHandler {
 
     private final FindAllTeamUseCase findAllTeamUseCase;
-
     private final FindTeamByIdUseCase findTeamByIdUseCase;
+
+    private final FindTeamByCountryUseCase findTeamByCountryUseCase;
     private final SaveTeamUseCase saveTeamUseCase;
 
     public Mono<ServerResponse> listenFindAllTeamsUseCase(ServerRequest serverRequest) {
@@ -34,6 +37,23 @@ public class TeamHandler {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(findTeamByIdUseCase.findTeamById(id), Cyclist.class);
+    }
+
+    public Mono<ServerResponse> listenFindTeamByCountryUseCase(ServerRequest serverRequest) {
+        String country = serverRequest.pathVariable("country");
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(findTeamByCountryUseCase.findAllTeamsByCountry(country), Cyclist.class)
+                .onErrorResume(this::handleErrorListenFindTeamByCountryUseCase);
+    }
+
+    private Mono<ServerResponse> handleErrorListenFindTeamByCountryUseCase(Throwable error) {
+        if(error instanceof NotFoundException){
+            return ServerResponse.status(HttpStatus.NO_CONTENT)
+                    .body(Mono.just(error.getMessage()), String.class);
+        }
+        return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Mono.just(error.getMessage()), String.class);
     }
 
     public Mono<ServerResponse> listenSaveUseCase(ServerRequest serverRequest) {

@@ -16,7 +16,7 @@ public class TeamRouterRest {
     public RouterFunction<ServerResponse> routerFunctionTeam(TeamHandler teamHandler) {
         return route(GET("/api/team"), teamHandler::listenFindAllTeamsUseCase)
                 .andRoute(GET("/api/team/{id}"), teamHandler::listenFindTeamByIdUseCase)
+                .andRoute(GET("/api/team/country/{country}"), teamHandler::listenFindTeamByCountryUseCase)
                 .andRoute(POST("/api/team/save"), teamHandler::listenSaveUseCase);
-
     }
 }

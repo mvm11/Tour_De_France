@@ -2,6 +2,7 @@ package co.com.api.mongo.team;
 
 
 import co.com.api.model.common.ex.BusinessException;
+import co.com.api.model.common.ex.NotFoundException;
 import co.com.api.model.team.Team;
 import co.com.api.model.team.gateways.TeamRepository;
 import co.com.api.mongo.helper.AdapterOperations;
@@ -38,6 +39,15 @@ public class TeamMongoRepositoryAdapter extends AdapterOperations<Team, TeamDocu
                 .onErrorResume(error -> Mono.error(new RuntimeException("Error getting team from MongoDB" + error.getMessage())))
                 .switchIfEmpty(Mono.error(BusinessException.Type.TEAM_NOT_FOUND.build("")))
                 .map(this::convertToTeam);
+    }
+
+    @Override
+    public Flux<Team> findTeamByCountry(String country) {
+        return repository.findAll()
+                .filter(teamDocument -> teamDocument.getCountry().equalsIgnoreCase(country))
+                .map(this::convertToTeam)
+                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting teams from MongoDB" + error.getMessage())))
+                .switchIfEmpty(Mono.error(new NotFoundException(NotFoundException.Type.TEAMS_NOT_FOUND_BY_COUNTRY, country)));
     }
 
     private Team convertToTeam(TeamDocument teamDocument) {
