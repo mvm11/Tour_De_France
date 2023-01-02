@@ -1,10 +1,9 @@
 package co.com.api.mongo.config;
 
-import co.com.api.mongo.config.MongoDBSecret;
-import org.springframework.boot.autoconfigure.mongo.ReactiveMongoClientFactory;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.boot.autoconfigure.mongo.MongoPropertiesClientSettingsBuilderCustomizer;
+import org.springframework.boot.autoconfigure.mongo.ReactiveMongoClientFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
