@@ -20,14 +20,14 @@ public class SaveCyclistUseCase {
 
     private final CyclistRepository cyclistRepository;
 
-    private final FindAllCyclistUseCase findAllCyclistUseCase;
+    private final FindAllCyclistsUseCase findAllCyclistsUseCase;
 
     public Mono<Cyclist> saveCyclist(Cyclist cyclist){
         return Mono.just(cyclist).flatMap(this::validateCyclistNumber);
     }
 
     private Mono<Cyclist> validateCyclistNumber(Cyclist cyclist1) {
-        return findAllCyclistUseCase
+        return findAllCyclistsUseCase
                 .findAllCyclist()
                 .filter(cyclist -> cyclist1.getCyclistNumber().equalsIgnoreCase(cyclist.getCyclistNumber()))
                 .collectList()
