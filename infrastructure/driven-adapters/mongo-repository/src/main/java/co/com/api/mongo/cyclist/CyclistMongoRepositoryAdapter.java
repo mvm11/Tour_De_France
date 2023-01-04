@@ -9,6 +9,8 @@ import co.com.api.mongo.team.TeamMongoDBRepository;
 import com.mongodb.DuplicateKeyException;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -44,14 +46,18 @@ implements CyclistRepository
     }
 
     @Override
+    public Flux<Cyclist> findAllCyclistByTeamCode(String teamCode) {
+        return mongoTemplate.find(Query.query(Criteria.where("teamCode").is(teamCode)), Team.class)
+                .flatMap(team -> Flux.fromIterable(team.getCyclists()))
+                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting all cyclist from MongoDB" + error.getMessage())));
+    }
+
+    @Override
     public Flux<Cyclist> findAllCyclistByNationality(String nationality) {
         return null;
     }
 
-    @Override
-    public Flux<Cyclist> findAllCyclistByTeamCode(String teamCode) {
-        return null;
-    }
+
 
     @Override
     public Mono<Cyclist> findCyclistById(String cyclistId) {
