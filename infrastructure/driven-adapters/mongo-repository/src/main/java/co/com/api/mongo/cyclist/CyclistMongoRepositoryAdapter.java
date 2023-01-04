@@ -32,10 +32,10 @@ implements CyclistRepository
         return mongoTemplate.findAll(Team.class)
                 .flatMapIterable(Team::getCyclists)
                 .map(this::buildCyclist)
-                .onErrorResume(this::getFindCyclistError);
+                .onErrorResume(this::getFindCyclistsError);
     }
 
-    private Mono<Cyclist> getFindCyclistError(Throwable error) {
+    private Mono<Cyclist> getFindCyclistsError(Throwable error) {
         return Mono.error(new RuntimeException("Error getting all cyclist from MongoDB" + error.getMessage()));
     }
 
@@ -52,7 +52,7 @@ implements CyclistRepository
     public Flux<Cyclist> findAllCyclistByTeamCode(String teamCode) {
         return mongoTemplate.find(Query.query(Criteria.where("teamCode").is(teamCode)), Team.class)
                 .flatMap(team -> Flux.fromIterable(team.getCyclists()))
-                .onErrorResume(this::getFindCyclistError);
+                .onErrorResume(this::getFindCyclistsError);
     }
 
     @Override
@@ -61,11 +61,18 @@ implements CyclistRepository
                 .flatMapIterable(Team::getCyclists)
                 .filter(cyclist -> cyclist.getNationality().equalsIgnoreCase(nationality))
                 .map(this::buildCyclist)
-                .onErrorResume(this::getFindCyclistError);
+                .onErrorResume(this::getFindCyclistsError);
     }
     @Override
-    public Mono<Cyclist> findCyclistByCyclistNumber(String cyclistNumber) {
-        return null;
+    public Mono<Cyclist> findCyclistByCyclistNumber(String teamCode, String cyclistNumber) {
+        return mongoTemplate.find(Query.query(Criteria.where("teamCode").is(teamCode)), Team.class)
+                .flatMap(team -> Flux.fromIterable(team.getCyclists()))
+                .filter(cyclist -> cyclist.getCyclistNumber().equalsIgnoreCase(cyclistNumber))
+                .next()
+                .onErrorResume(this::getFindCyclistError);
+    }
+    private Mono<Cyclist> getFindCyclistError(Throwable error) {
+        return Mono.error(new RuntimeException("Error getting cyclist from MongoDB" + error.getMessage()));
     }
 
     @Override
@@ -74,16 +81,6 @@ implements CyclistRepository
                 .onErrorResume(error -> error instanceof DuplicateKeyException ?
                 Mono.error(new BusinessException(BusinessException.Type.ERROR_CYCLIST, "An error occurred while creating the cyclist due to ID duplicates: " + error.getMessage()))
                 : Mono.error(new RuntimeException("An error occurred while saving the cyclist" +  error.getMessage())));
-    }
-
-    private  CyclistDocument convertToCyclistDocument(Cyclist cyclist1) {
-        return CyclistDocument.builder()
-
-                .cyclistName(cyclist1.getCyclistName())
-                .cyclistNumber(cyclist1.getCyclistNumber())
-                .teamCode(cyclist1.getTeamCode())
-                .nationality(cyclist1.getNationality())
-                .build();
     }
 
     @Override

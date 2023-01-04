@@ -2,10 +2,7 @@ package co.com.api.api.cyclist;
 
 import co.com.api.model.common.ex.BusinessException;
 import co.com.api.model.cyclist.Cyclist;
-import co.com.api.usecase.findallcyclist.cyclist.FindAllCyclistsByNationalityUseCase;
-import co.com.api.usecase.findallcyclist.cyclist.FindAllCyclistsByTeamCodeUseCase;
-import co.com.api.usecase.findallcyclist.cyclist.FindAllCyclistsUseCase;
-import co.com.api.usecase.findallcyclist.cyclist.SaveCyclistUseCase;
+import co.com.api.usecase.findallcyclist.cyclist.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,10 +16,10 @@ import reactor.core.publisher.Mono;
 public class CyclistHandler {
 
     private final FindAllCyclistsUseCase findAllCyclistsUseCase;
-
     private final FindAllCyclistsByTeamCodeUseCase findAllCyclistsByTeamCodeUseCase;
-
     private final FindAllCyclistsByNationalityUseCase findAllCyclistsByNationalityUseCase;
+
+    private final FindCyclistsByCyclistNumberUseCase findCyclistsByCyclistNumberUseCase;
     private final SaveCyclistUseCase saveCyclistUseCase;
     public Mono<ServerResponse> listenFindAllCyclistUseCase(ServerRequest serverRequest) {
         return ServerResponse.ok()
@@ -42,6 +39,14 @@ public class CyclistHandler {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(findAllCyclistsByNationalityUseCase.findAllCyclistByNationality(nationality), Cyclist.class);
+    }
+
+    public Mono<ServerResponse> listenFindCyclistsByCyclistNumberUseCase(ServerRequest serverRequest) {
+        String teamCode = serverRequest.pathVariable("teamCode");
+        String cyclistNumber = serverRequest.pathVariable("cyclistNumber");
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(findCyclistsByCyclistNumberUseCase.findCyclistsByCyclistNumber(teamCode, cyclistNumber), Cyclist.class);
     }
 
     public Mono<ServerResponse> listenPOSTUseCase(ServerRequest serverRequest) {
