@@ -16,12 +16,6 @@ public class FindAllCyclistByTeamCodeUseCase {
     private final CyclistRepository cyclistRepository;
 
     public Mono<List<Cyclist>> findAllCyclistByTeamCode(String teamCode){
-        return cyclistRepository
-                .findAllCyclist()
-                .filter(cyclist -> cyclist.getTeamCode().equals(teamCode))
-                .collectList()
-                .flatMap(cyclistList -> cyclistList.isEmpty()
-                        ? Mono.error(BusinessException.Type.NO_CYCLISTS_TEAM_NUMBER.build("")) :
-                        Mono.just(cyclistList));
+        return null;
     }
 }

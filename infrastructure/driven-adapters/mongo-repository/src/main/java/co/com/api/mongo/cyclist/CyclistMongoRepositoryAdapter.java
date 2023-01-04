@@ -3,7 +3,9 @@ package co.com.api.mongo.cyclist;
 import co.com.api.model.common.ex.BusinessException;
 import co.com.api.model.cyclist.Cyclist;
 import co.com.api.model.cyclist.gateways.CyclistRepository;
+import co.com.api.model.team.Team;
 import co.com.api.mongo.helper.AdapterOperations;
+import co.com.api.mongo.team.TeamMongoDBRepository;
 import com.mongodb.DuplicateKeyException;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -16,26 +18,28 @@ public class CyclistMongoRepositoryAdapter extends AdapterOperations<Cyclist, Cy
 implements CyclistRepository
 {
     private final ReactiveMongoTemplate mongoTemplate;
-    public CyclistMongoRepositoryAdapter(CyclistMongoDBRepository repository, ObjectMapper mapper, ReactiveMongoTemplate mongoTemplate) {
+
+    private final TeamMongoDBRepository teamMongoDBRepository;
+    public CyclistMongoRepositoryAdapter(CyclistMongoDBRepository repository, ObjectMapper mapper, ReactiveMongoTemplate mongoTemplate, TeamMongoDBRepository teamMongoDBRepository) {
         super(repository, mapper, d -> mapper.map(d, Cyclist.class));
         this.mongoTemplate = mongoTemplate;
+        this.teamMongoDBRepository = teamMongoDBRepository;
     }
 
     @Override
     public Flux<Cyclist> findAllCyclist() {
-        return repository.findAll()
-                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting all cyclist from MongoDB" + error.getMessage())))
-                .switchIfEmpty(Mono.error(BusinessException.Type.ERROR_GETTING_All_cyclist.build("")))
-                .map(this::convertToCyclist);
+        return mongoTemplate.findAll(Team.class)
+                .flatMapIterable(Team::getCyclists)
+                .map(CyclistMongoRepositoryAdapter::buildCyclist)
+                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting all cyclist from MongoDB" + error.getMessage())));
     }
 
-    private Cyclist convertToCyclist(CyclistDocument cyclistDocument) {
+    private static Cyclist buildCyclist(Cyclist cyclist) {
         return Cyclist.builder()
-
-                .cyclistName(cyclistDocument.getCyclistName())
-                .cyclistNumber(cyclistDocument.getCyclistNumber())
-                .teamCode(cyclistDocument.getTeamCode())
-                .nationality(cyclistDocument.getNationality())
+                .cyclistName(cyclist.getCyclistName())
+                .cyclistNumber(cyclist.getCyclistNumber())
+                .teamCode(cyclist.getTeamCode())
+                .nationality(cyclist.getNationality())
                 .build();
     }
 
