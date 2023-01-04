@@ -15,8 +15,9 @@ public class CyclistRouterRest {
 @Bean
 public RouterFunction<ServerResponse> routerFunctionCyclist(CyclistHandler cyclistHandler) {
     return route(GET("/api/cyclist"), cyclistHandler::listenFindAllCyclistUseCase)
-            .andRoute(GET("/api/cyclist/{teamCode}"), cyclistHandler::listenFindAllCyclistByTeamCodeUseCase)
-    .andRoute(POST("/api/cyclist/save"), cyclistHandler::listenPOSTUseCase).and(route(GET("/api/otherusercase/path"), cyclistHandler::listenFindAllCyclistByTeamCodeUseCase));
+            .andRoute(GET("/api/cyclist/teamCode/{teamCode}"), cyclistHandler::listenFindAllCyclistByTeamCodeUseCase)
+            .andRoute(GET("/api/cyclist/nationality/{nationality}"), cyclistHandler::listenFindAllCyclistByNationalityUseCase)
+            .andRoute(POST("/api/cyclist/save"), cyclistHandler::listenPOSTUseCase).and(route(GET("/api/otherusercase/path"), cyclistHandler::listenFindAllCyclistByTeamCodeUseCase));
 
     }
 }

@@ -8,10 +8,11 @@ import reactor.core.publisher.Flux;
 
 @Log
 @RequiredArgsConstructor
-public class FindAllCyclistsByTeamCodeUseCase {
+public class FindAllCyclistsByNationalityUseCase {
+
     private final CyclistRepository cyclistRepository;
 
-    public Flux<Cyclist> findAllCyclistByTeamCode(String teamCode){
-        return cyclistRepository.findAllCyclistByTeamCode(teamCode);
+    public Flux<Cyclist> findAllCyclistByNationality(String nationality){
+        return cyclistRepository.findAllCyclistByNationality(nationality);
     }
 }

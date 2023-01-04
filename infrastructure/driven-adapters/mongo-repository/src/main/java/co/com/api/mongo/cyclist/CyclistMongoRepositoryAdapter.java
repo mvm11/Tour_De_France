@@ -20,7 +20,6 @@ public class CyclistMongoRepositoryAdapter extends AdapterOperations<Cyclist, Cy
 implements CyclistRepository
 {
     private final ReactiveMongoTemplate mongoTemplate;
-
     private final TeamMongoDBRepository teamMongoDBRepository;
     public CyclistMongoRepositoryAdapter(CyclistMongoDBRepository repository, ObjectMapper mapper, ReactiveMongoTemplate mongoTemplate, TeamMongoDBRepository teamMongoDBRepository) {
         super(repository, mapper, d -> mapper.map(d, Cyclist.class));
@@ -32,11 +31,15 @@ implements CyclistRepository
     public Flux<Cyclist> findAllCyclist() {
         return mongoTemplate.findAll(Team.class)
                 .flatMapIterable(Team::getCyclists)
-                .map(CyclistMongoRepositoryAdapter::buildCyclist)
-                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting all cyclist from MongoDB" + error.getMessage())));
+                .map(this::buildCyclist)
+                .onErrorResume(this::getFindCyclistError);
     }
 
-    private static Cyclist buildCyclist(Cyclist cyclist) {
+    private Mono<Cyclist> getFindCyclistError(Throwable error) {
+        return Mono.error(new RuntimeException("Error getting all cyclist from MongoDB" + error.getMessage()));
+    }
+
+    private Cyclist buildCyclist(Cyclist cyclist) {
         return Cyclist.builder()
                 .cyclistName(cyclist.getCyclistName())
                 .cyclistNumber(cyclist.getCyclistNumber())
@@ -49,18 +52,19 @@ implements CyclistRepository
     public Flux<Cyclist> findAllCyclistByTeamCode(String teamCode) {
         return mongoTemplate.find(Query.query(Criteria.where("teamCode").is(teamCode)), Team.class)
                 .flatMap(team -> Flux.fromIterable(team.getCyclists()))
-                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting all cyclist from MongoDB" + error.getMessage())));
+                .onErrorResume(this::getFindCyclistError);
     }
 
     @Override
     public Flux<Cyclist> findAllCyclistByNationality(String nationality) {
-        return null;
+        return mongoTemplate.findAll(Team.class)
+                .flatMapIterable(Team::getCyclists)
+                .filter(cyclist -> cyclist.getNationality().equalsIgnoreCase(nationality))
+                .map(this::buildCyclist)
+                .onErrorResume(this::getFindCyclistError);
     }
-
-
-
     @Override
-    public Mono<Cyclist> findCyclistById(String cyclistId) {
+    public Mono<Cyclist> findCyclistByCyclistNumber(String cyclistNumber) {
         return null;
     }
 
