@@ -124,15 +124,7 @@ public class UpdateTeamUseCase {
 
     private Mono<Team> buildTeam(Team oldTeam, Team newTeam) {
         return Mono.just(oldTeam)
-                .flatMap(team -> {
-                    Team team1 = Team.builder()
-                            .teamName(newTeam.getTeamName())
-                            .teamCode(newTeam.getTeamCode())
-                            .country(newTeam.getCountry())
-                            .cyclists(newTeam.getCyclists())
-                            .build();
-                   return teamRepository.updateTeam(oldTeam.getId(), newTeam);
-                });
+                .flatMap(team -> teamRepository.updateTeam(oldTeam.getId(), newTeam));
     }
 
 }

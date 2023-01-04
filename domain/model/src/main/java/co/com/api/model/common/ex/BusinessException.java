@@ -21,7 +21,13 @@ public class BusinessException extends ApplicationException {
         CYCLIST_LIST_CYCLIST_NUMBER_DUPLICATE("A team can only 8 cyclist with different number"),
         CYCLIST_LIST_CYCLIST_DISTINCT_TEAM_NUMBER("There are cyclist with a different team number"),
         CYCLIST_LIST_WITH_EMPTY_FIELDS("There are cyclist with empty fields"),
-        TEAM_NOT_FOUND("Team not found");
+
+        CYCLIST_WITH_EMPTY_FIELDS("The cyclist has empty fields"),
+        TEAM_NOT_FOUND("Team not found"),
+        TEAM_NOT_FOUND_BY_TEAM_CODE("Team hasn't been found with team code: "),
+        TEAM_MAX_CYCLISTS("The team already has 8 cyclist"),
+        CYCLIST_WITH_DIFFERENT_TEAM_CODE("The cyclist has a different team code"),
+        CYCLIST_WITH_SAME_CYCLIST_NUMBER("the team has a cyclist with the same code as the cyclist you are trying to save");
 
 
         private final String message;

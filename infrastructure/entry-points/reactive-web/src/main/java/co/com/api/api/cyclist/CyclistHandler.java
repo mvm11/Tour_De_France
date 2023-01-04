@@ -50,11 +50,11 @@ public class CyclistHandler {
     }
 
     public Mono<ServerResponse> listenPOSTUseCase(ServerRequest serverRequest) {
-
+            String teamCode = serverRequest.pathVariable("teamCode");
             return serverRequest.bodyToMono(Cyclist.class)
                     .flatMap(cyclist -> ServerResponse.ok()
                             .contentType(MediaType.APPLICATION_JSON)
-                            .body(saveCyclistUseCase.saveCyclist(cyclist), Cyclist.class))
+                            .body(saveCyclistUseCase.saveCyclist(teamCode, cyclist), Cyclist.class))
                     .onErrorResume(this::handleError);
     }
 

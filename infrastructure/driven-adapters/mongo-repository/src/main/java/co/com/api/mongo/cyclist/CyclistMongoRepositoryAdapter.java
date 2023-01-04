@@ -11,6 +11,7 @@ import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -76,11 +77,16 @@ implements CyclistRepository
     }
 
     @Override
-    public Mono<Cyclist> saveCyclist(Cyclist cyclist) {
-        return mongoTemplate.save(cyclist)
-                .onErrorResume(error -> error instanceof DuplicateKeyException ?
-                Mono.error(new BusinessException(BusinessException.Type.ERROR_CYCLIST, "An error occurred while creating the cyclist due to ID duplicates: " + error.getMessage()))
-                : Mono.error(new RuntimeException("An error occurred while saving the cyclist" +  error.getMessage())));
+    public Mono<Cyclist> saveCyclist(String teamCode, Cyclist cyclist) {
+
+        return mongoTemplate.findOne(Query.query(Criteria.where("teamCode").is(teamCode)), Team.class)
+                .map(foundTeam -> {
+                    foundTeam.getCyclists().add(cyclist);
+                    return foundTeam;
+                })
+                .flatMap(mongoTemplate::save)
+                .map(savedTeam -> cyclist)
+                .onErrorResume(error -> Mono.error(new RuntimeException("An error occurred while saving the cyclist" +  error.getMessage())));
     }
 
     @Override

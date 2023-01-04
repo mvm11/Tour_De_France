@@ -3,13 +3,14 @@ package co.com.api.usecase.findallcyclist.cyclist;
 import co.com.api.model.common.ex.BusinessException;
 import co.com.api.model.cyclist.Cyclist;
 import co.com.api.model.cyclist.gateways.CyclistRepository;
+import co.com.api.model.team.Team;
+import co.com.api.usecase.findallcyclist.team.FindAllTeamUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -22,32 +23,56 @@ public class SaveCyclistUseCase {
 
     private final FindAllCyclistsUseCase findAllCyclistsUseCase;
 
-    public Mono<Cyclist> saveCyclist(Cyclist cyclist){
-        return Mono.just(cyclist).flatMap(this::validateCyclistNumber);
-    }
+    private final FindAllTeamUseCase findAllTeamUseCase;
 
-    private Mono<Cyclist> validateCyclistNumber(Cyclist cyclist1) {
-        return findAllCyclistsUseCase
-                .findAllCyclist()
-                .filter(cyclist -> cyclist1.getCyclistNumber().equalsIgnoreCase(cyclist.getCyclistNumber()))
+
+
+    public Mono<Cyclist> saveCyclist(String teamCode, Cyclist cyclist){
+        return findAllTeamUseCase.findAllTeams()
+                .filter(team -> team.getTeamCode().equalsIgnoreCase(teamCode))
                 .collectList()
-                .flatMap(list -> (list.isEmpty()) ? validateCyclistFields(cyclist1) : Mono.error(BusinessException.Type.DUPLICATE_CYCLIST_NUMBER.build("")));
+                .flatMap(teams -> teams.isEmpty()
+                        ? Mono.error(BusinessException.Type.TEAM_NOT_FOUND_BY_TEAM_CODE.build(teamCode))
+                        : validateTeam(teams.stream().findFirst().orElse(null), cyclist));
+
     }
 
-    private Mono<Cyclist> validateCyclistFields(Cyclist cyclist1) {
-        return Mono.just(Arrays.stream(cyclist1.cyclistFields())
-                        .filter(this::getFieldsPredicate)
-                        .collect(Collectors.toList()))
-                .flatMap(validateCyclistFieldsSize(cyclist1));
+    private Mono<Cyclist> validateTeam(Team team, Cyclist cyclist) {
+        return isNull(team)
+                ? Mono.error(BusinessException.Type.INCOMPLETE_TEAM_INFORMATION.build(""))
+                : validateTeamCyclistListSize(team, cyclist);
     }
 
-    private boolean getFieldsPredicate(String field) {
-        return !isNull(field) && !field.equalsIgnoreCase("");
+    private Mono<Cyclist> validateTeamCyclistListSize(Team team, Cyclist cyclist) {
+        return team.getCyclists().size() >= 8
+                ? Mono.error(BusinessException.Type.TEAM_MAX_CYCLISTS.build(""))
+                : validateCyclistFields(team, cyclist);
     }
-    private Function<List<String>, Mono<Cyclist>> validateCyclistFieldsSize(Cyclist cyclist1) {
-        return list -> (list.size() == cyclist1.cyclistFields().length)
-                ? cyclistRepository.saveCyclist(cyclist1)
-                : Mono.error(BusinessException.Type.INCOMPLETE_CYCLIST_INFORMATION.build(""));
+
+    private Mono<Cyclist> validateCyclistFields(Team team, Cyclist cyclist) {
+        return Arrays.stream(cyclist.cyclistFields())
+                .anyMatch(Objects::isNull)
+                || Arrays.stream(cyclist.cyclistFields())
+                .anyMatch(field -> field.equalsIgnoreCase(""))
+                ? Mono.error(BusinessException.Type.CYCLIST_WITH_EMPTY_FIELDS.build(""))
+                : compareCyclistTeamCode(team, cyclist);
+    }
+
+    private Mono<Cyclist> compareCyclistTeamCode(Team team, Cyclist cyclist) {
+        return cyclist.getTeamCode().equalsIgnoreCase(team.getTeamCode())
+                ? compareTeamCyclistsNumber(team, cyclist)
+                : Mono.error(BusinessException.Type.CYCLIST_WITH_DIFFERENT_TEAM_CODE.build(""));
+    }
+
+    private Mono<Cyclist> compareTeamCyclistsNumber(Team team, Cyclist cyclist) {
+        return team.getCyclists().stream()
+                .noneMatch(cyclist1 -> cyclist1.getCyclistNumber().equalsIgnoreCase(cyclist.getCyclistNumber()))
+                ? saveNewCyclist(team, cyclist)
+                : Mono.error(BusinessException.Type.CYCLIST_WITH_SAME_CYCLIST_NUMBER.build(""));
+    }
+
+    private Mono<Cyclist> saveNewCyclist(Team team, Cyclist cyclist) {
+        return cyclistRepository.saveCyclist(team.getTeamCode(), cyclist);
     }
 
 }

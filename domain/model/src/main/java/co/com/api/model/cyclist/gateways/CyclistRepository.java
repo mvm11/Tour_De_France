@@ -10,7 +10,7 @@ public interface CyclistRepository {
     Flux<Cyclist> findAllCyclistByTeamCode(String teamCode);
     Flux<Cyclist> findAllCyclistByNationality(String nationality);
     Mono<Cyclist> findCyclistByCyclistNumber(String teamCode, String cyclistNumber);
-    Mono<Cyclist> saveCyclist(Cyclist cyclist);
+    Mono<Cyclist> saveCyclist(String teamCode, Cyclist cyclist);
     Mono<Cyclist> updateCyclistById(String cyclistId, Cyclist cyclist);
     Mono<Void> deleteCyclistById(String cyclistId);
 
