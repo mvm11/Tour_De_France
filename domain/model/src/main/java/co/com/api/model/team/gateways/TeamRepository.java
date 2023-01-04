@@ -10,6 +10,6 @@ public interface TeamRepository {
     Mono<Team> findTeamById(String teamId);
     Flux<Team> findTeamByCountry(String country);
     Mono<Team> saveTeam(Team team);
-    Mono<Team> updateTeamById(String teamId, Team team);
+    Mono<Team> updateTeam(String teamId, Team team);
     Mono<Void> deleteTeamById(String teamId);
 }

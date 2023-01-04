@@ -1,14 +1,15 @@
 package co.com.api.mongo.team;
 
 
-import co.com.api.model.common.ex.BusinessException;
-import co.com.api.model.common.ex.NotFoundException;
 import co.com.api.model.team.Team;
 import co.com.api.model.team.gateways.TeamRepository;
 import co.com.api.mongo.helper.AdapterOperations;
-import com.mongodb.DuplicateKeyException;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,7 +30,6 @@ public class TeamMongoRepositoryAdapter extends AdapterOperations<Team, TeamDocu
     public Flux<Team> findAllTeams() {
         return repository.findAll()
                 .onErrorResume(error -> Mono.error(new RuntimeException("Error getting all teams from MongoDB" + error.getMessage())))
-                .switchIfEmpty(Mono.error(BusinessException.Type.TEAMS_NOT_FOUND.build("")))
                 .map(this::convertToTeam);
     }
 
@@ -37,7 +37,6 @@ public class TeamMongoRepositoryAdapter extends AdapterOperations<Team, TeamDocu
     public Mono<Team> findTeamById(String teamId) {
         return repository.findById(teamId)
                 .onErrorResume(error -> Mono.error(new RuntimeException("Error getting team from MongoDB" + error.getMessage())))
-                .switchIfEmpty(Mono.error(BusinessException.Type.TEAM_NOT_FOUND.build("")))
                 .map(this::convertToTeam);
     }
 
@@ -46,8 +45,7 @@ public class TeamMongoRepositoryAdapter extends AdapterOperations<Team, TeamDocu
         return repository.findAll()
                 .filter(teamDocument -> teamDocument.getCountry().equalsIgnoreCase(country))
                 .map(this::convertToTeam)
-                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting teams from MongoDB" + error.getMessage())))
-                .switchIfEmpty(Mono.error(new NotFoundException(NotFoundException.Type.TEAMS_NOT_FOUND_BY_COUNTRY, country)));
+                .onErrorResume(error -> Mono.error(new RuntimeException("Error getting teams from MongoDB" + error.getMessage())));
     }
 
     private Team convertToTeam(TeamDocument teamDocument) {
@@ -62,15 +60,25 @@ public class TeamMongoRepositoryAdapter extends AdapterOperations<Team, TeamDocu
 
     @Override
     public Mono<Team> saveTeam(Team team) {
-        return mongoTemplate.save(team)
-                .onErrorResume(error -> error instanceof DuplicateKeyException ?
-                        Mono.error(new BusinessException(BusinessException.Type.ERROR_TEAM, "An error occurred while creating the team due to ID duplicates: " + error.getMessage()))
-                        : Mono.error(new RuntimeException("An error occurred while saving the team" +  error.getMessage())));
+        return mongoTemplate.insert(team)
+                .onErrorResume(error -> Mono.error(new RuntimeException("An error occurred while saving the team" +  error.getMessage())));
     }
 
     @Override
-    public Mono<Team> updateTeamById(String teamId, Team team) {
-        return null;
+    public Mono<Team> updateTeam(String teamId, Team team) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("id")
+                .is(teamId));
+
+        Update update = new Update();
+        update.set("teamName", team.getTeamName());
+        update.set("teamCode", team.getTeamCode());
+        update.set("country", team.getCountry());
+        update.set("cyclists", team.getCyclists());
+
+        return mongoTemplate.findAndModify(query,
+                update, FindAndModifyOptions.options().returnNew(true), Team.class)
+                        .onErrorResume(error -> Mono.error(new RuntimeException("An error occurred while updating the team" +  error.getMessage())));
     }
 
     @Override

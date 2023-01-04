@@ -22,6 +22,8 @@ public class TeamHandler {
     private final FindTeamByCountryUseCase findTeamByCountryUseCase;
     private final SaveTeamUseCase saveTeamUseCase;
 
+    private final UpdateTeamUseCase updateTeamUseCase;
+
     private final DeleteTeamUseCase deleteTeamUseCase;
 
     public Mono<ServerResponse> listenFindAllTeamsUseCase(ServerRequest serverRequest) {
@@ -60,6 +62,15 @@ public class TeamHandler {
                 .flatMap(team -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(saveTeamUseCase.saveTeam(team), Team.class))
+                .onErrorResume(this::handleError);
+    }
+
+    public Mono<ServerResponse> listenUpdateTeamUseCase(ServerRequest serverRequest) {
+        String id = serverRequest.pathVariable("id");
+        return serverRequest.bodyToMono(Team.class)
+                .flatMap(team -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(updateTeamUseCase.updateTeam(id, team), Team.class))
                 .onErrorResume(this::handleError);
     }
 

@@ -8,7 +8,7 @@ public class BusinessException extends ApplicationException {
 
         ERROR_GETTING_All_cyclist("Error getting cyclist in MongoDB."),
         TEAMS_NOT_FOUND("Teams not found"),
-        ERROR_TEAM("An error occurred while creating the record due to ID duplicates."),
+        CYCLIST_WITH_CYCLIST_NUMBER_MAYOR_THAN_3("There are cyclist with a cyclist number mayor than 3 digits."),
         DUPLICATE_CYCLIST_NUMBER("there cannot exist cyclists with the same number"),
         INCOMPLETE_CYCLIST_INFORMATION("Incomplete cyclist information"),
         INCOMPLETE_TEAM_INFORMATION("Incomplete team information"),

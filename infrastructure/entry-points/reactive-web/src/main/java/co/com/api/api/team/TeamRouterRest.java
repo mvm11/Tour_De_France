@@ -18,6 +18,7 @@ public class TeamRouterRest {
                 .andRoute(GET("/api/team/{id}"), teamHandler::listenFindTeamByIdUseCase)
                 .andRoute(GET("/api/team/country/{country}"), teamHandler::listenFindTeamByCountryUseCase)
                 .andRoute(POST("/api/team/save"), teamHandler::listenSaveUseCase)
+                .andRoute(PUT("/api/team/update/{id}"), teamHandler::listenUpdateTeamUseCase)
                 .andRoute(DELETE("/api/team/delete/{id}"), teamHandler::listenDeleteTeamUseCase);
     }
 }

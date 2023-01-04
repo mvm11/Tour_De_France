@@ -10,9 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static java.util.Objects.isNull;
@@ -26,77 +24,24 @@ public class SaveTeamUseCase {
     private final FindAllTeamUseCase findAllTeamUseCase;
 
     public Mono<Team> saveTeam(Team team){
-        return Mono.just(team).flatMap(this::validateDuplicateTeamCode);
+        return Mono.just(team).flatMap(this::validateTeamFields);
     }
 
-    private Mono<Team> validateDuplicateTeamCode(Team team) {
-        return findAllTeamUseCase
-                .findAllTeams()
-                .filter(team1 -> team1.getTeamCode().equalsIgnoreCase(team.getTeamCode()))
-                .collectList()
-                .flatMap(list -> (list.isEmpty())
-                        ? validateDuplicateTeamName(team)
-                        : Mono.error(BusinessException.Type.DUPLICATE_TEAM_NUMBER.build("")));
+    private Mono<Team> validateTeamFields(Team team) {
+        return Mono.just(Arrays.stream(team.teamFields())
+                        .filter(this::getFieldsPredicate)
+                        .collect(Collectors.toList()))
+                .flatMap(validateTeamFieldsSize(team));
     }
 
-    private Mono<Team> validateDuplicateTeamName(Team team) {
-        return findAllTeamUseCase
-                .findAllTeams()
-                .filter(team1 -> team1.getTeamName().equalsIgnoreCase(team.getTeamName()))
-                .collectList()
-                .flatMap(list -> (list.isEmpty())
-                        ? validateTeamCyclistList(team)
-                        : Mono.error(BusinessException.Type.DUPLICATE_TEAM_NAME.build("")));
+    private boolean getFieldsPredicate(String field) {
+        return !isNull(field) && !field.equalsIgnoreCase("");
     }
 
-    private Mono<Team> validateTeamCyclistList(Team team) {
-        return Mono.just(team)
-                .flatMap(team1 -> team1.getCyclists().size() > 8
-                        ? Mono.error(BusinessException.Type.CYCLIST_LIST.build(""))
-                        : validateTeamCyclistCode(team1));
-    }
-
-    private Mono<Team> validateTeamCyclistCode(Team team) {
-        return Mono.just(team)
-                .flatMap(team1 -> compareTeamCyclistListSize(team, team1)
-                        ? Mono.error(BusinessException.Type.CYCLIST_LIST_CYCLIST_NUMBER_DUPLICATE.build(""))
-                        : validateTeamCyclist(team1));
-    }
-
-    private Mono<Team> validateTeamCyclist(Team team) {
-        return Mono.just(team)
-                .flatMap(team1 -> team1.getCyclists()
-                        .stream()
-                        .filter(cyclist -> cyclist.getTeamCode().equalsIgnoreCase(team.getTeamCode()))
-                        .count() != team.getCyclists().size()
-                        ? Mono.error(BusinessException.Type.CYCLIST_LIST_CYCLIST_DISTINCT_TEAM_NUMBER.build(""))
-                        : validateTeamCyclistFields(team1));
-    }
-    private boolean compareTeamCyclistListSize(Team team, Team team1) {
-        return getLongStream(team1)
-                .sum() != team.getCyclists().size();
-    }
-
-    private LongStream getLongStream(Team team1) {
-        return getStringListMap(team1)
-                .values()
-                .stream()
-                .filter(getCyclistWithSameNumberPredicate())
-                .mapToLong(Collection::size);
-    }
-
-    private Map<String, List<Cyclist>> getStringListMap(Team team1) {
-        return getCyclistStream(team1)
-                .collect(Collectors.groupingBy(Cyclist::getCyclistNumber));
-    }
-
-    private Stream<Cyclist> getCyclistStream(Team team1) {
-        return team1.getCyclists()
-                .stream();
-    }
-
-    private Predicate<List<Cyclist>> getCyclistWithSameNumberPredicate() {
-        return cyclistWithSameNumber -> cyclistWithSameNumber.size() == 1;
+    private Function<List<String>, Mono<Team>> validateTeamFieldsSize(Team team) {
+        return list -> (list.size() == team.teamFields().length)
+                ? validateTeamCyclistFields(team)
+                : Mono.error(BusinessException.Type.INCOMPLETE_TEAM_INFORMATION.build(""));
     }
 
     private Mono<Team> validateTeamCyclistFields(Team team) {
@@ -104,7 +49,7 @@ public class SaveTeamUseCase {
                 .flatMap(team1 -> filterCyclistListFields(team1)
                         .findAny()
                         .isEmpty()
-                        ? validateTeamCode(team1)
+                        ? validateTeamCyclistList(team)
                         : Mono.error(BusinessException.Type.CYCLIST_LIST_WITH_EMPTY_FIELDS.build("")));
     }
 
@@ -121,29 +66,76 @@ public class SaveTeamUseCase {
                 .anyMatch(field -> field.equalsIgnoreCase(""));
     }
 
+    private Mono<Team> validateTeamCyclistList(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> team1.getCyclists().size() > 8
+                        ? Mono.error(BusinessException.Type.CYCLIST_LIST.build(""))
+                        : validateTeamCode(team1));
+    }
     private Mono<Team> validateTeamCode(Team team) {
         return Mono.just(team)
                 .flatMap(team1 -> team1.getTeamCode().length() > 3
                         ? Mono.error(BusinessException.Type.TEAM_CODE_EXCEPTION.build(""))
-                        : validateTeamFields(team1));
+                        : compareTeamCodeWithCyclistList(team1));
     }
 
-    private Mono<Team> validateTeamFields(Team team) {
-        return Mono.just(Arrays.stream(team.teamFields())
-                .filter(this::getFieldsPredicate)
-                .collect(Collectors.toList()))
-                .flatMap(validateTeamFieldsSize(team));
+    private Mono<Team> compareTeamCodeWithCyclistList(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> team1.getCyclists()
+                        .stream()
+                        .allMatch(cyclist -> cyclist.getTeamCode().equalsIgnoreCase(team.getTeamCode()))
+                        ? validateTeamCyclistListCyclistNumber(team)
+                        : Mono.error(BusinessException.Type.CYCLIST_LIST_CYCLIST_DISTINCT_TEAM_NUMBER.build("")));
+    }
+
+    private Mono<Team> validateTeamCyclistListCyclistNumber(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> validateDuplicateCyclistNumber(team1)
+                        ? Mono.error(BusinessException.Type.DUPLICATE_CYCLIST_NUMBER.build(""))
+                        : validateTeamCyclistListCyclistNumberSize(team));
+    }
+
+    private static boolean validateDuplicateCyclistNumber(Team team1) {
+        return gropingByCyclistNumber(team1)
+                .entrySet()
+                .stream()
+                .anyMatch(entry -> entry.getValue().size() > 1);
+    }
+
+    private static Map<String, List<Cyclist>> gropingByCyclistNumber(Team team1) {
+        return team1.getCyclists()
+                .stream()
+                .collect(Collectors.groupingBy(Cyclist::getCyclistNumber));
+    }
+
+    private Mono<Team> validateTeamCyclistListCyclistNumberSize(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> team1.getCyclists()
+                        .stream()
+                        .noneMatch(cyclist -> cyclist.getCyclistNumber().length() > 3)
+                        ? validateTeamWithSameTeamNumber(team)
+                        : Mono.error(BusinessException.Type.CYCLIST_WITH_CYCLIST_NUMBER_MAYOR_THAN_3.build("")));
+    }
+
+    private Mono<Team> validateTeamWithSameTeamNumber(Team team) {
+        return findAllTeamUseCase.findAllTeams()
+                .collectList()
+                .flatMap(teams -> teams.isEmpty() ? saveNewTeam(team) : validateDuplicateTeamNumber(team));
+    }
+
+    private Mono<Team> saveNewTeam(Team team){
+        return teamRepository.saveTeam(team);
+    }
+
+    private Mono<Team> validateDuplicateTeamNumber(Team team) {
+        return findAllTeamUseCase.findAllTeams()
+                .collectList()
+                .flatMap(teams -> teams.stream()
+                        .noneMatch(team1 -> team1.getTeamCode().equalsIgnoreCase(team.getTeamCode()))
+                        ? saveNewTeam(team)
+                        : Mono.error(BusinessException.Type.DUPLICATE_TEAM_NUMBER.build("")));
     }
 
 
-    private boolean getFieldsPredicate(String field) {
-        return !isNull(field) && !field.equalsIgnoreCase("");
-    }
-
-    private Function<List<String>, Mono<Team>> validateTeamFieldsSize(Team team) {
-        return list -> (list.size() == team.teamFields().length)
-                ? teamRepository.saveTeam(team)
-                : Mono.error(BusinessException.Type.INCOMPLETE_TEAM_INFORMATION.build(""));
-    }
 
 }

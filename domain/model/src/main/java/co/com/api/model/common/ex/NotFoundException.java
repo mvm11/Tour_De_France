@@ -7,7 +7,9 @@ public class NotFoundException  extends ApplicationException {
     public enum Type {
 
         TEAMS_NOT_FOUND_BY_COUNTRY("Teams haven't been found with country: "),
-        TEAM_NOT_FOUND_BY_ID("Team haven't been found with id: ");
+
+        TEAMS_NOT_FOUND("Teams not found"),
+        TEAM_NOT_FOUND_BY_ID("Team hasn't been found with id: ");
 
         private final String message;
 
