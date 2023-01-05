@@ -2,6 +2,7 @@ package co.com.api.api.cyclist;
 
 import co.com.api.model.common.ex.BusinessException;
 import co.com.api.model.cyclist.Cyclist;
+import co.com.api.model.team.Team;
 import co.com.api.usecase.findallcyclist.cyclist.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,8 +21,9 @@ public class CyclistHandler {
     private final FindAllCyclistsByNationalityUseCase findAllCyclistsByNationalityUseCase;
     private final FindCyclistsByCyclistNumberUseCase findCyclistsByCyclistNumberUseCase;
     private final SaveCyclistUseCase saveCyclistUseCase;
-
     private final UpdateCyclistUseCase updateCyclistUseCase;
+
+    private final DeleteCyclistUseCase deleteCyclistUseCase;
     public Mono<ServerResponse> listenFindAllCyclistUseCase(ServerRequest serverRequest) {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -67,6 +69,14 @@ public class CyclistHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(updateCyclistUseCase.updateCyclist(teamCode, cyclistNumber, cyclist), Cyclist.class))
                 .onErrorResume(this::handleError);
+    }
+
+    public Mono<ServerResponse> listenDeleteCyclistUseCase(ServerRequest serverRequest) {
+        String teamCode = serverRequest.pathVariable("teamCode");
+        String cyclistNumber = serverRequest.pathVariable("cyclistNumber");
+
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(deleteCyclistUseCase.deleteCyclist(teamCode, cyclistNumber), Team.class);
     }
 
     private Mono<ServerResponse> handleError(Throwable error) {

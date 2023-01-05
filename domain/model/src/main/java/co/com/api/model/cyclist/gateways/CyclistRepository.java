@@ -12,7 +12,7 @@ public interface CyclistRepository {
     Mono<Cyclist> findCyclistByCyclistNumber(String teamCode, String cyclistNumber);
     Mono<Cyclist> saveCyclist(String teamCode, Cyclist cyclist);
     Mono<Cyclist> updateCyclist(String teamCode, String cyclistNumber, Cyclist cyclist);
-    Mono<Void> deleteCyclistById(String cyclistId);
+    Mono<Void> deleteCyclist(String teamCode, String cyclistNumber);
 
 
 

@@ -136,7 +136,21 @@ implements CyclistRepository
     }
 
     @Override
-    public Mono<Void> deleteCyclistById(String cyclistId) {
-        return null;
-    }
+    public Mono<Void> deleteCyclist(String teamCode, String cyclistNumber) {
+        Query teamQuery = new Query(Criteria.where("teamCode")
+                .is(teamCode)
+                .and("cyclists")
+                .elemMatch((Criteria.where("cyclistNumber").is(cyclistNumber))));
+
+
+        Update update = new Update().pull("cyclists", new Query().addCriteria(Criteria.where("cyclistNumber").is(cyclistNumber)));
+
+        FindAndModifyOptions options = FindAndModifyOptions.options();
+        options.returnNew(true);
+
+        return mongoTemplate.findOne(teamQuery, Team.class)
+                .flatMap(team -> mongoTemplate.findAndModify(teamQuery, update, options, Team.class))
+                .then()
+                .onErrorResume(error -> Mono.error(new RuntimeException("An error occurred while deleting the cyclist" +  error.getMessage())));
+        }
 }
