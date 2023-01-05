@@ -49,7 +49,7 @@ public class SaveTeamUseCase {
 
     private Mono<Team> validateTeamCyclist(Team team) {
         return Mono.just(team)
-                .flatMap(team1 -> team.getCyclists().isEmpty()
+                .flatMap(team1 -> !isNull(team1.getCyclists())
                         ? validateTeamCyclistFields(team)
                         : Mono.error(BusinessException.Type.CYCLIST_LIST_NULL.build("")));
     }
