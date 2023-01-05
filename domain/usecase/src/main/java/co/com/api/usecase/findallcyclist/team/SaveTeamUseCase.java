@@ -98,14 +98,14 @@ public class SaveTeamUseCase {
                         : validateTeamCyclistListCyclistNumberSize(team));
     }
 
-    private static boolean validateDuplicateCyclistNumber(Team team1) {
+    private boolean validateDuplicateCyclistNumber(Team team1) {
         return gropingByCyclistNumber(team1)
                 .entrySet()
                 .stream()
                 .anyMatch(entry -> entry.getValue().size() > 1);
     }
 
-    private static Map<String, List<Cyclist>> gropingByCyclistNumber(Team team1) {
+    private Map<String, List<Cyclist>> gropingByCyclistNumber(Team team1) {
         return team1.getCyclists()
                 .stream()
                 .collect(Collectors.groupingBy(Cyclist::getCyclistNumber));

@@ -1,13 +1,12 @@
 package co.com.api.mongo.cyclist;
 
-import co.com.api.model.common.ex.BusinessException;
 import co.com.api.model.cyclist.Cyclist;
 import co.com.api.model.cyclist.gateways.CyclistRepository;
 import co.com.api.model.team.Team;
 import co.com.api.mongo.helper.AdapterOperations;
 import co.com.api.mongo.team.TeamMongoDBRepository;
-import com.mongodb.DuplicateKeyException;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -90,8 +89,50 @@ implements CyclistRepository
     }
 
     @Override
-    public Mono<Cyclist> updateCyclistById(String cyclistId, Cyclist cyclist) {
-        return null;
+    public Mono<Cyclist> updateCyclist(String teamCode, String cyclistNumber, Cyclist cyclist) {
+        Query teamQuery = getTeamQuery(teamCode, cyclistNumber);
+
+        Update update = setCyclistUpdate(cyclist);
+
+        return startCyclistUpdatingProcess(cyclistNumber, teamQuery, update)
+                .onErrorResume(error -> Mono.error(new RuntimeException("An error occurred while updating the cyclist " +  error.getMessage())));
+    }
+
+    private Query getTeamQuery(String teamCode, String cyclistNumber) {
+        return new Query(Criteria.where("teamCode")
+                .is(teamCode)
+                .and("cyclists.cyclistNumber")
+                .is(cyclistNumber));
+    }
+
+    private Update setCyclistUpdate(Cyclist cyclist) {
+        return new Update()
+                .set("cyclists.$.cyclistName", cyclist.getCyclistName())
+                .set("cyclists.$.cyclistNumber", cyclist.getCyclistNumber())
+                .set("cyclists.$.teamCode", cyclist.getTeamCode())
+                .set("cyclists.$.nationality", cyclist.getNationality());
+    }
+
+    private Mono<Cyclist> startCyclistUpdatingProcess(String cyclistNumber, Query teamQuery, Update update) {
+        return mongoTemplate.findOne(teamQuery, Team.class)
+                .flatMap(team -> mongoTemplate.findAndModify(teamQuery, update, FindAndModifyOptions.options().returnNew(true), Team.class))
+                .flatMap(team -> validateUpdatedCyclist(getUpdatedCyclist(cyclistNumber, team)));
+    }
+
+    private Mono<Cyclist> validateUpdatedCyclist(Cyclist updatedCyclist) {
+        if (updatedCyclist != null) {
+            return Mono.just(updatedCyclist);
+        } else {
+            return Mono.empty();
+        }
+    }
+
+    private Cyclist getUpdatedCyclist(String cyclistNumber, Team team) {
+        return team.getCyclists()
+                .stream()
+                .filter(cyclist1 -> cyclist1.getCyclistNumber().equalsIgnoreCase(cyclistNumber))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override

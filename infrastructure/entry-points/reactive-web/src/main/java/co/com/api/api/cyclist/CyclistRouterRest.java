@@ -5,8 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 
@@ -18,7 +17,8 @@ public RouterFunction<ServerResponse> routerFunctionCyclist(CyclistHandler cycli
             .andRoute(GET("/api/cyclist/teamCode/{teamCode}"), cyclistHandler::listenFindAllCyclistByTeamCodeUseCase)
             .andRoute(GET("/api/cyclist/nationality/{nationality}"), cyclistHandler::listenFindAllCyclistByNationalityUseCase)
             .andRoute(GET("/api/cyclist/teamCode/{teamCode}/cyclistNumber/{cyclistNumber}"), cyclistHandler::listenFindCyclistsByCyclistNumberUseCase)
-            .andRoute(POST("/api/cyclist/save/teamCode/{teamCode}"), cyclistHandler::listenPOSTUseCase).and(route(GET("/api/otherusercase/path"), cyclistHandler::listenFindAllCyclistByTeamCodeUseCase));
-
+            .andRoute(POST("/api/cyclist/save/teamCode/{teamCode}"), cyclistHandler::listenPOSTUseCase)
+            .andRoute(PUT("/api/cyclist/update/teamCode/{teamCode}/cyclistNumber/{cyclistNumber}"), cyclistHandler::listenUpdateCyclistUseCase)
+            .and(route(GET("/api/otherusercase/path"), cyclistHandler::listenFindAllCyclistByTeamCodeUseCase));
     }
 }

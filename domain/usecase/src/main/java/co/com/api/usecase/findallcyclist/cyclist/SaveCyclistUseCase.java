@@ -11,7 +11,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 
@@ -20,12 +19,7 @@ import static java.util.Objects.isNull;
 public class SaveCyclistUseCase {
 
     private final CyclistRepository cyclistRepository;
-
-    private final FindAllCyclistsUseCase findAllCyclistsUseCase;
-
     private final FindAllTeamUseCase findAllTeamUseCase;
-
-
 
     public Mono<Cyclist> saveCyclist(String teamCode, Cyclist cyclist){
         return findAllTeamUseCase.findAllTeams()

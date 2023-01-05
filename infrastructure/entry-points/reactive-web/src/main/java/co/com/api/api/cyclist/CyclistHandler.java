@@ -18,9 +18,10 @@ public class CyclistHandler {
     private final FindAllCyclistsUseCase findAllCyclistsUseCase;
     private final FindAllCyclistsByTeamCodeUseCase findAllCyclistsByTeamCodeUseCase;
     private final FindAllCyclistsByNationalityUseCase findAllCyclistsByNationalityUseCase;
-
     private final FindCyclistsByCyclistNumberUseCase findCyclistsByCyclistNumberUseCase;
     private final SaveCyclistUseCase saveCyclistUseCase;
+
+    private final UpdateCyclistUseCase updateCyclistUseCase;
     public Mono<ServerResponse> listenFindAllCyclistUseCase(ServerRequest serverRequest) {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -56,6 +57,16 @@ public class CyclistHandler {
                             .contentType(MediaType.APPLICATION_JSON)
                             .body(saveCyclistUseCase.saveCyclist(teamCode, cyclist), Cyclist.class))
                     .onErrorResume(this::handleError);
+    }
+
+    public Mono<ServerResponse> listenUpdateCyclistUseCase(ServerRequest serverRequest) {
+        String teamCode = serverRequest.pathVariable("teamCode");
+        String cyclistNumber = serverRequest.pathVariable("cyclistNumber");
+        return serverRequest.bodyToMono(Cyclist.class)
+                .flatMap(cyclist -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(updateCyclistUseCase.updateCyclist(teamCode, cyclistNumber, cyclist), Cyclist.class))
+                .onErrorResume(this::handleError);
     }
 
     private Mono<ServerResponse> handleError(Throwable error) {
