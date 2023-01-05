@@ -43,8 +43,15 @@ public class SaveTeamUseCase {
 
     private Function<List<String>, Mono<Team>> validateTeamFieldsSize(Team team) {
         return list -> (list.size() == team.teamFields().length)
-                ? validateTeamCyclistFields(team)
+                ? validateTeamCyclist(team)
                 : Mono.error(BusinessException.Type.INCOMPLETE_TEAM_INFORMATION.build(""));
+    }
+
+    private Mono<Team> validateTeamCyclist(Team team) {
+        return Mono.just(team)
+                .flatMap(team1 -> team.getCyclists().isEmpty()
+                        ? validateTeamCyclistFields(team)
+                        : Mono.error(BusinessException.Type.CYCLIST_LIST_NULL.build("")));
     }
 
     private Mono<Team> validateTeamCyclistFields(Team team) {

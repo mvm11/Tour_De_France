@@ -20,7 +20,8 @@ public class BusinessException extends ApplicationException {
         CYCLIST_WITH_SAME_CYCLIST_NUMBER("the team has a cyclist with the same code as the cyclist you are trying to save"),
         NO_FOUND_CYCLIST_CYCLIST_NUMBER("Cyclist not found with cyclistNumber: "),
         DUPLICATE_CYCLIST_UPDATED("you are trying to update a cyclist, but his cyclistNumber already exists in the team's cyclist list"),
-        CANNOT_DELETE_CYCLIST("It cannot delete a cyclist from a team without cyclists");
+        CANNOT_DELETE_CYCLIST("It cannot delete a cyclist from a team without cyclists"),
+        CYCLIST_LIST_NULL("The cyclist list cannot be null");
 
 
         private final String message;
